@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t trolo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run trolo/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t trolo/multi-client ./client
+  - docker build -t trolo/multi-nginx ./nginx
+  - docker build -t trolo/multi-server ./server
+  - docker build -t trolo/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  
+  - docker push trolo/multi-client
+  - docker push trolo/multi-nginx
+  - docker push trolo/multi-server
+  - docker push trolo/multi-worker
